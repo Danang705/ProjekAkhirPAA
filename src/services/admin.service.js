@@ -48,7 +48,7 @@ const getStatistics = async () => {
     supabase.from('users').select('*', { count: 'exact', head: true }),
     supabase.from('posts').select('*', { count: 'exact', head: true }),
     supabase.from('responses').select('*', { count: 'exact', head: true }),
-    supabase.from('posts').select('*', { count: 'exact', head: true }).eq('status', 'resolved')
+    supabase.from('posts').select('*', { count: 'exact', head: true }).eq('status', 'closed')
   ]);
 
   return {
