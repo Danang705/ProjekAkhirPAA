@@ -1,0 +1,392 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API Platform Pelaporan Barang Hilang P2P",
+    "version": "1.0.0",
+    "description": "Dokumentasi API terpusat untuk Platform P2P Lost & Found Berbasis Lokasi (Radius GIS)."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Server Pengembangan (Development)"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "tags": ["Autentikasi"],
+        "summary": "Mendaftar sebagai pengguna baru",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string" },
+                  "password": { "type": "string" },
+                  "phone": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Berhasil Dibuat" }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": ["Autentikasi"],
+        "summary": "Masuk ke aplikasi (Login) dan mendapatkan token",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Berhasil Masuk" }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": ["Autentikasi"],
+        "summary": "Keluar dari aplikasi (Logout)",
+        "responses": {
+          "200": { "description": "Berhasil Keluar" }
+        }
+      }
+    },
+    "/api/auth/refresh-token": {
+      "post": {
+        "tags": ["Autentikasi"],
+        "summary": "Memperbarui akses token yang telah kedaluwarsa",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refreshToken": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Token Berhasil Diperbarui" }
+        }
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "tags": ["Autentikasi"],
+        "summary": "Meminta kode OTP untuk mereset kata sandi",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "OTP Berhasil Dikirim ke Email" }
+        }
+      }
+    },
+    "/api/auth/verify-otp": {
+      "post": {
+        "tags": ["Autentikasi"],
+        "summary": "Memverifikasi kode OTP yang diterima dari email",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" },
+                  "otpCode": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "OTP Valid, Reset Token Dikembalikan" }
+        }
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "tags": ["Autentikasi"],
+        "summary": "Mereset kata sandi menggunakan reset token",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "resetToken": { "type": "string" },
+                  "newPassword": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Kata Sandi Berhasil Diubah" }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": ["Autentikasi"],
+        "summary": "Mengambil data profil pengguna yang sedang login saat ini",
+        "responses": {
+          "200": { "description": "Berhasil Mengambil Data Profil" }
+        }
+      }
+    },
+    "/api/users/profile": {
+      "put": {
+        "tags": ["Pengguna"],
+        "summary": "Memperbarui profil diri sendiri (Foto, No HP, Alamat)",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "avatar": { "type": "string" },
+                  "phone": { "type": "string" },
+                  "address": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Profil Berhasil Diperbarui" }
+        }
+      }
+    },
+    "/api/posts": {
+      "post": {
+        "tags": ["Postingan (Lost & Found)"],
+        "summary": "Membuat postingan baru (Lapor Kehilangan atau Lapor Penemuan Barang)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string", "enum": ["lost", "found"] },
+                  "title": { "type": "string" },
+                  "description": { "type": "string" },
+                  "category": { "type": "string" },
+                  "date": { "type": "string", "format": "date" },
+                  "lat": { "type": "number" },
+                  "lng": { "type": "number" },
+                  "images": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Postingan Berhasil Dibuat" }
+        }
+      },
+      "get": {
+        "tags": ["Postingan (Lost & Found)"],
+        "summary": "Melihat daftar postingan (Beranda) - Mendukung Filter Radius Geografis (GIS)",
+        "security": [],
+        "parameters": [
+          { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["lost", "found"] } },
+          { "name": "lat", "in": "query", "schema": { "type": "number" } },
+          { "name": "lng", "in": "query", "schema": { "type": "number" } },
+          { "name": "radius", "in": "query", "schema": { "type": "number" }, "description": "Jarak pencarian dalam satuan meter (contoh: 5000 untuk 5km)" },
+          { "name": "search", "in": "query", "schema": { "type": "string" }, "description": "Kata kunci pencarian judul/deskripsi" },
+          { "name": "category", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Daftar Postingan Berhasil Diambil" }
+        }
+      }
+    },
+    "/api/posts/{postId}/responses": {
+      "post": {
+        "tags": ["Klaim & Respons"],
+        "summary": "Mengirimkan respons atau mengklaim postingan milik orang lain",
+        "parameters": [
+          { "name": "postId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": { "type": "string" },
+                  "proofImage": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Klaim Berhasil Diajukan" }
+        }
+      },
+      "get": {
+        "tags": ["Klaim & Respons"],
+        "summary": "Melihat daftar orang-orang yang mengklaim postingan Anda (Hanya Pembuat Post)",
+        "parameters": [
+          { "name": "postId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Daftar Klaim Berhasil Diambil" }
+        }
+      }
+    },
+    "/api/responses/{id}/status": {
+      "patch": {
+        "tags": ["Klaim & Respons"],
+        "summary": "Menerima (Accept) atau Menolak (Reject) klaim seseorang. Jika diterima, sistem otomatis membuatkan Room Chat.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string", "enum": ["accepted", "rejected"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Status Klaim Berhasil Diperbarui" }
+        }
+      }
+    },
+    "/api/chats": {
+      "get": {
+        "tags": ["Komunikasi (Chat)"],
+        "summary": "Melihat daftar Ruang Obrolan (Inbox) milik pengguna",
+        "responses": {
+          "200": { "description": "Daftar Obrolan Berhasil Diambil" }
+        }
+      }
+    },
+    "/api/upload": {
+      "post": {
+        "tags": ["Unggah File (Upload)"],
+        "summary": "Mengunggah file secara umum ke Supabase Storage (Foto Profil, Foto Barang, dll)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "File gambar yang akan diunggah"
+                  },
+                  "folder": {
+                    "type": "string",
+                    "description": "Opsional: Nama folder di bucket Supabase (contoh: 'avatars', 'posts', 'chats'). Default: 'misc'"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "File Berhasil Diunggah (Mengembalikan URL Public)" }
+        }
+      }
+    },
+    "/api/chats/{roomId}/messages": {
+      "get": {
+        "tags": ["Komunikasi (Chat)"],
+        "summary": "Menarik riwayat pesan (termasuk titik koordinat Live Location) dari dalam ruang obrolan tertentu",
+        "parameters": [
+          { "name": "roomId", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Riwayat Pesan Berhasil Diambil" }
+        }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "tags": ["Administrator"],
+        "summary": "Mengambil seluruh data pengguna terdaftar (Khusus Admin)",
+        "responses": {
+          "200": { "description": "Daftar Pengguna Berhasil Diambil" }
+        }
+      }
+    },
+    "/api/admin/statistics": {
+      "get": {
+        "tags": ["Administrator"],
+        "summary": "Menampilkan ringkasan statistik platform (Khusus Admin)",
+        "responses": {
+          "200": { "description": "Statistik Berhasil Diambil" }
+        }
+      }
+    }
+  }
+}
