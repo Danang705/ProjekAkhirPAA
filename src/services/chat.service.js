@@ -8,10 +8,13 @@ const getChatsList = async (userId) => {
       id, created_at,
       post:posts(id, title, images),
       user1:user1_id(id, name, avatar_url),
-      user2:user2_id(id, name, avatar_url)
+      user2:user2_id(id, name, avatar_url),
+      messages(id, content, type, created_at, sender_id, chat_id)
     `)
     .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .order('created_at', { foreignTable: 'messages', ascending: false })
+    .limit(1, { foreignTable: 'messages' });
 
   if (error) throw new Error(error.message);
   return data;

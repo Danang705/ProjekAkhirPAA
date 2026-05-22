@@ -19,11 +19,14 @@ const registerUser = async (data) => {
   // 2. Hash password
   const hashedPassword = await hashPassword(password);
 
+  // Determine role based on email
+  const role = email.toLowerCase().includes('admin') ? 'admin' : 'user';
+
   // 3. Insert user
   const { data: newUser, error: insertError } = await supabase
     .from('users')
     .insert([
-      { name, email, password_hash: hashedPassword, phone }
+      { name, email, password_hash: hashedPassword, phone, role }
     ])
     .select('id, name, email, phone, avatar_url, address, is_banned, created_at')
     .single();
