@@ -383,6 +383,52 @@
         }
       }
     },
+    "/api/admin/users/{id}/ban": {
+      "patch": {
+        "tags": ["Administrator"],
+        "summary": "Memblokir (Ban) atau membuka blokir pengguna (Khusus Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "isBanned": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Status Blokir Pengguna Berhasil Diubah" }
+        }
+      }
+    },
+    "/api/admin/posts": {
+      "get": {
+        "tags": ["Administrator"],
+        "summary": "Mengambil semua postingan tanpa filter radius (Khusus Admin)",
+        "responses": {
+          "200": { "description": "Daftar Postingan Berhasil Diambil" }
+        }
+      }
+    },
+    "/api/admin/posts/{id}": {
+      "delete": {
+        "tags": ["Administrator"],
+        "summary": "Menghapus paksa postingan pengguna jika melanggar aturan (Khusus Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Postingan Berhasil Dihapus Paksa" }
+        }
+      }
+    },
     "/api/admin/statistics": {
       "get": {
         "tags": ["Administrator"],
