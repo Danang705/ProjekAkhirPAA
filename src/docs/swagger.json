@@ -7,8 +7,12 @@
   },
   "servers": [
     {
+      "url": "/",
+      "description": "Server Produksi (Otomatis menyesuaikan domain Render)"
+    },
+    {
       "url": "http://localhost:3000",
-      "description": "Server Pengembangan (Development)"
+      "description": "Server Pengembangan (Lokal)"
     }
   ],
   "components": {
