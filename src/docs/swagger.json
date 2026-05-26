@@ -215,6 +215,18 @@
         }
       }
     },
+    "/api/users/{id}": {
+      "get": {
+        "tags": ["Pengguna"],
+        "summary": "Mengambil data profil pengguna lain",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Profil Berhasil Diambil" }
+        }
+      }
+    },
     "/api/posts": {
       "post": {
         "tags": ["Postingan (Lost & Found)"],
@@ -257,6 +269,74 @@
         ],
         "responses": {
           "200": { "description": "Daftar Postingan Berhasil Diambil" }
+        }
+      }
+    },
+    "/api/posts/maps": {
+      "get": {
+        "tags": ["Postingan (Lost & Found)"],
+        "summary": "Melihat titik koordinat seluruh laporan untuk ditampilkan di Peta",
+        "security": [],
+        "responses": {
+          "200": { "description": "Daftar Koordinat Berhasil Diambil" }
+        }
+      }
+    },
+    "/api/posts/{id}": {
+      "get": {
+        "tags": ["Postingan (Lost & Found)"],
+        "summary": "Melihat detail lengkap satu laporan spesifik",
+        "security": [],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Detail Postingan Berhasil Diambil" }
+        }
+      },
+      "put": {
+        "tags": ["Postingan (Lost & Found)"],
+        "summary": "Memperbarui isi postingan (Hanya Pemilik)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Postingan Berhasil Diperbarui" }
+        }
+      },
+      "delete": {
+        "tags": ["Postingan (Lost & Found)"],
+        "summary": "Menghapus postingan sendiri (Hanya Pemilik)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Postingan Berhasil Dihapus" }
+        }
+      }
+    },
+    "/api/posts/{id}/status": {
+      "patch": {
+        "tags": ["Postingan (Lost & Found)"],
+        "summary": "Memperbarui status postingan (misal: menjadi closed/diselesaikan)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string", "enum": ["active", "closed"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Status Postingan Berhasil Diperbarui" }
         }
       }
     },
