@@ -19,8 +19,8 @@ const registerUser = async (data) => {
   // 2. Hash password
   const hashedPassword = await hashPassword(password);
 
-  // Determine role based on email
-  const role = email.toLowerCase().includes('admin') ? 'admin' : 'user';
+  // We no longer auto-assign admin based on email
+  const role = 'user';
 
   // 3. Insert user
   const { data: newUser, error: insertError } = await supabase
@@ -61,7 +61,7 @@ const loginUser = async (email, password) => {
   }
 
   // 3. Generate tokens
-  const payload = { id: user.id, email: user.email };
+  const payload = { id: user.id, email: user.email, role: user.role };
   const accessToken = generateToken(payload, false);
   const refreshToken = generateToken(payload, true);
 

@@ -6,9 +6,8 @@ const requireAdmin = (req, res, next) => {
   // For this project, we can either check if the user has a specific admin email, 
   // or assume the token has { isAdmin: true }. 
   
-  // Here we'll do a simple mock check (e.g., checking if the email contains 'admin')
-  // Replace this with your actual admin verification logic.
-  if (req.user && req.user.email && req.user.email.includes('admin')) {
+  // Now we check the actual role from the JWT payload
+  if (req.user && req.user.role === 'admin') {
     next();
   } else {
     return errorResponse(res, 403, 'Forbidden: Admin access required');
