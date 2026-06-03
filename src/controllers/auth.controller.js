@@ -80,9 +80,9 @@ const forgotPassword = async (req, res) => {
 
     const otpCode = await authService.generateOtp(email);
     
-    // Send email using our new email service asynchronously to prevent request timeouts
+    // Send email (now with retry + explicit SMTP, so awaiting is safe)
     const emailService = require('../services/email.service');
-    emailService.sendOtpEmail(email, otpCode).catch(console.error);
+    await emailService.sendOtpEmail(email, otpCode);
 
     return successResponse(res, 200, 'OTP sent to email successfully');
   } catch (error) {
