@@ -21,4 +21,5 @@ module.exports = {
     pass: process.env.EMAIL_PASS,
   },
   resendApiKey: process.env.RESEND_API_KEY,
+  brevoApiKey: process.env.BREVO_API_KEY,
 };
