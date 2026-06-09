@@ -23,7 +23,7 @@ module.exports = {
   resendApiKey: process.env.RESEND_API_KEY,
   brevoApiKey: process.env.BREVO_API_KEY,
   smtp: {
-    host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.SMTP_PORT) || 587,
     user: process.env.SMTP_USER || process.env.EMAIL_USER,
     pass: process.env.SMTP_PASS || process.env.EMAIL_PASS,
