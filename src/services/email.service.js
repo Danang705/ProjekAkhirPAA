@@ -1,27 +1,54 @@
 const nodemailer = require('nodemailer');
-const dns = require('dns');
+const dns = require('dns').promises;
 const env = require('../config/env');
 
-// Create SMTP Transporter using configured env credentials
-const transporter = nodemailer.createTransport({
-  host: env.smtp.host,
-  port: env.smtp.port,
-  secure: env.smtp.port === 465, // True for port 465 SSL, false for others (like 587 STARTTLS)
-  auth: {
-    user: env.smtp.user,
-    pass: env.smtp.pass,
-  },
-  connectionTimeout: 30000,
-  greetingTimeout: 30000,
-  socketTimeout: 30000,
-  lookup: (hostname, options, callback) => {
-    return dns.lookup(hostname, { family: 4 }, callback);
-  },
-});
+let transporterInstance = null;
+let resolvedHost = null;
+
+const getTransporter = async () => {
+  if (transporterInstance) return transporterInstance;
+
+  let host = env.smtp.host;
+  let tlsOptions = {};
+
+  if (host === 'smtp.gmail.com' || host.includes('gmail.com')) {
+    try {
+      console.log(`Resolving IPv4 for SMTP host: ${host}...`);
+      const addresses = await dns.resolve4(host);
+      if (addresses && addresses.length > 0) {
+        resolvedHost = addresses[0];
+        console.log(`Resolved ${host} to IPv4 address: ${resolvedHost}`);
+        host = resolvedHost;
+        tlsOptions = {
+          servername: env.smtp.host
+        };
+      }
+    } catch (dnsErr) {
+      console.error(`DNS resolution failed for ${host}, using hostname directly:`, dnsErr.message);
+    }
+  }
+
+  transporterInstance = nodemailer.createTransport({
+    host: host,
+    port: env.smtp.port,
+    secure: env.smtp.port === 465, // True for port 465 SSL, false for others (like 587 STARTTLS)
+    auth: {
+      user: env.smtp.user,
+      pass: env.smtp.pass,
+    },
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000,
+    tls: tlsOptions
+  });
+
+  return transporterInstance;
+};
 
 // Verify connection on startup
-transporter.verify()
-  .then(() => console.log(`✅ Email transporter ready - connected to SMTP server (${env.smtp.host})`))
+getTransporter()
+  .then(transporter => transporter.verify())
+  .then(() => console.log(`✅ Email transporter ready - connected to SMTP server (resolved: ${resolvedHost || env.smtp.host})`))
   .catch((err) => console.error('❌ Email transporter verification failed:', err.message));
 
 const sendOtpEmail = async (toEmail, otpCode, retries = 2) => {
@@ -49,6 +76,7 @@ const sendOtpEmail = async (toEmail, otpCode, retries = 2) => {
 
   for (let attempt = 1; attempt <= retries + 1; attempt++) {
     try {
+      const transporter = await getTransporter();
       const info = await transporter.sendMail(mailOptions);
       console.log(`✅ OTP email sent to ${toEmail} (attempt ${attempt}): ${info.response}`);
       return true;
