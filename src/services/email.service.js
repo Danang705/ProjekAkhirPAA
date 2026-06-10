@@ -1,62 +1,31 @@
-const nodemailer = require('nodemailer');
-const dns = require('dns').promises;
+const axios = require('axios');
 const env = require('../config/env');
 
-let transporterInstance = null;
-let resolvedHost = null;
-
-const getTransporter = async () => {
-  if (transporterInstance) return transporterInstance;
-
-  let host = env.smtp.host;
-  let tlsOptions = {};
-
-  if (host === 'smtp.gmail.com' || host.includes('gmail.com')) {
-    try {
-      console.log(`Resolving IPv4 for SMTP host: ${host}...`);
-      const addresses = await dns.resolve4(host);
-      if (addresses && addresses.length > 0) {
-        resolvedHost = addresses[0];
-        console.log(`Resolved ${host} to IPv4 address: ${resolvedHost}`);
-        host = resolvedHost;
-        tlsOptions = {
-          servername: env.smtp.host
-        };
-      }
-    } catch (dnsErr) {
-      console.error(`DNS resolution failed for ${host}, using hostname directly:`, dnsErr.message);
-    }
-  }
-
-  transporterInstance = nodemailer.createTransport({
-    host: host,
-    port: env.smtp.port,
-    secure: env.smtp.port === 465, // True for port 465 SSL, false for others (like 587 STARTTLS)
-    auth: {
-      user: env.smtp.user,
-      pass: env.smtp.pass,
-    },
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
-    tls: tlsOptions
-  });
-
-  return transporterInstance;
-};
-
-// Verify connection on startup
-getTransporter()
-  .then(transporter => transporter.verify())
-  .then(() => console.log(`✅ Email transporter ready - connected to SMTP server (resolved: ${resolvedHost || env.smtp.host})`))
-  .catch((err) => console.error('❌ Email transporter verification failed:', err.message));
+console.log('✅ Email service initialized - configured with Brevo API');
 
 const sendOtpEmail = async (toEmail, otpCode, retries = 2) => {
-  const mailOptions = {
-    from: `"TraceIT - Lost & Found" <${env.smtp.user}>`,
-    to: toEmail,
+  const brevoUrl = 'https://api.brevo.com/v3/smtp/email';
+  const apiKey = env.brevoApiKey;
+
+  if (!apiKey) {
+    console.error('❌ BREVO_API_KEY is not defined in the environment variables');
+    throw new Error('Email service is not configured (missing API key)');
+  }
+
+  const senderEmail = env.smtp.user || env.email.user || 'danangtanggul123@gmail.com';
+
+  const data = {
+    sender: {
+      name: 'TraceIT - Lost & Found',
+      email: senderEmail
+    },
+    to: [
+      {
+        email: toEmail
+      }
+    ],
     subject: 'Kode OTP Reset Password - TraceIT',
-    html: `
+    htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="text-align: center; margin-bottom: 20px;">
           <h1 style="color: #2196F3;">TraceIT</h1>
@@ -71,22 +40,30 @@ const sendOtpEmail = async (toEmail, otpCode, retries = 2) => {
         <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
         <p style="color: #999; font-size: 12px;">Email ini dikirim otomatis oleh sistem TraceIT. Jangan membalas email ini.</p>
       </div>
-    `,
+    `
+  };
+
+  const headers = {
+    'accept': 'application/json',
+    'api-key': apiKey,
+    'content-type': 'application/json'
   };
 
   for (let attempt = 1; attempt <= retries + 1; attempt++) {
     try {
-      const transporter = await getTransporter();
-      const info = await transporter.sendMail(mailOptions);
-      console.log(`✅ OTP email sent to ${toEmail} (attempt ${attempt}): ${info.response}`);
+      const response = await axios.post(brevoUrl, data, { headers });
+      console.log(`✅ OTP email sent via Brevo to ${toEmail} (attempt ${attempt}):`, response.data);
       return true;
     } catch (error) {
-      console.error(`❌ Attempt ${attempt} failed to send email to ${toEmail}:`, error.message);
+      const errorMsg = error.response && error.response.data 
+        ? JSON.stringify(error.response.data) 
+        : error.message;
+      console.error(`❌ Attempt ${attempt} failed to send email to ${toEmail}:`, errorMsg);
       if (attempt <= retries) {
         console.log(`🔄 Retrying in 2 seconds...`);
         await new Promise(resolve => setTimeout(resolve, 2000));
       } else {
-        throw new Error('Failed to send OTP email after multiple attempts');
+        throw new Error(`Failed to send OTP email after multiple attempts: ${errorMsg}`);
       }
     }
   }
