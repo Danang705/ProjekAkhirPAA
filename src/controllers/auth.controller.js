@@ -12,8 +12,8 @@ const register = async (req, res) => {
     }
 
     // Password complexity validation
-    if (password.length < 12) {
-      return errorResponse(res, 400, 'Password must be at least 12 characters long');
+    if (password.length < 8) {
+      return errorResponse(res, 400, 'Password must be at least 8 characters long');
     }
 
     const hasUppercase = /[A-Z]/.test(password);
