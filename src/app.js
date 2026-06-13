@@ -25,6 +25,8 @@ const chatRoutes = require('./routes/chat.routes');
 const adminRoutes = require('./routes/admin.routes');
 const uploadRoutes = require('./routes/upload.routes');
 const notificationRoutes = require('./routes/notification.routes');
+const commentRoutes = require('./routes/comment.routes');
+const reportRoutes = require('./routes/report.routes');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./docs/swagger.json');
 
@@ -38,6 +40,8 @@ app.use('/api/chats', chatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/comments', commentRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Health check & UptimeRobot ping endpoint (agar Render tidak tidur)
 app.get('/ping', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
