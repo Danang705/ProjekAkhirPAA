@@ -113,6 +113,39 @@ const updateResponseStatus = async (responseId, userId, status) => {
       console.error('Failed to create chat room:', chatError);
     } else {
       chatRoom = chat;
+
+      // Auto-send claim details to the chat room
+      try {
+        if (responseData.message && responseData.message.trim() !== '') {
+          const { error: msgErr } = await supabase
+            .from('messages')
+            .insert([{
+              chat_id: chatRoom.id,
+              sender_id: responseData.user_id, // claimant
+              content: responseData.message,
+              type: 'text'
+            }]);
+          if (msgErr) {
+            console.error('Failed to auto-send claim text message:', msgErr);
+          }
+        }
+
+        if (responseData.proof_image_url && responseData.proof_image_url.trim() !== '') {
+          const { error: imgErr } = await supabase
+            .from('messages')
+            .insert([{
+              chat_id: chatRoom.id,
+              sender_id: responseData.user_id, // claimant
+              content: responseData.proof_image_url,
+              type: 'image'
+            }]);
+          if (imgErr) {
+            console.error('Failed to auto-send claim proof image:', imgErr);
+          }
+        }
+      } catch (err) {
+        console.error('Error auto-sending claim messages:', err);
+      }
     }
   }
 
