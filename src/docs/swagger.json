@@ -582,6 +582,174 @@
         }
       }
     },
+    "/api/comments": {
+      "post": {
+        "tags": ["Komentar"],
+        "summary": "Menambahkan komentar baru ke postingan",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["postId", "content"],
+                "properties": {
+                  "postId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID postingan barang hilang/temuan"
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "Isi komentar"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Komentar berhasil ditambahkan" },
+          "400": { "description": "postId dan content wajib diisi" },
+          "401": { "description": "Tidak terautentikasi" }
+        }
+      }
+    },
+    "/api/comments/post/{postId}": {
+      "get": {
+        "tags": ["Komentar"],
+        "summary": "Mengambil daftar komentar berdasarkan ID postingan",
+        "security": [],
+        "parameters": [
+          {
+            "name": "postId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID postingan"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Daftar komentar berhasil diambil" },
+          "400": { "description": "postId wajib disertakan" }
+        }
+      }
+    },
+    "/api/comments/{id}": {
+      "delete": {
+        "tags": ["Komentar"],
+        "summary": "Menghapus komentar (hanya pemilik komentar atau pemilik postingan)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID komentar"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Komentar berhasil dihapus" },
+          "401": { "description": "Tidak terautentikasi" },
+          "403": { "description": "Tidak diizinkan (bukan pemilik)" },
+          "404": { "description": "Komentar tidak ditemukan" }
+        }
+      }
+    },
+    "/api/reports": {
+      "post": {
+        "tags": ["Laporan (Reports)"],
+        "summary": "Melaporkan postingan tertentu yang dianggap melanggar aturan",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["postId", "reason"],
+                "properties": {
+                  "postId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID postingan yang dilaporkan"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "description": "Alasan pelaporan (misal: spam, inappropriate content, dll)"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Penjelasan tambahan atau detail laporan (opsional)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Laporan berhasil dikirim" },
+          "400": { "description": "postId dan reason wajib diisi" },
+          "401": { "description": "Tidak terautentikasi" }
+        }
+      },
+      "get": {
+        "tags": ["Administrator"],
+        "summary": "Mengambil semua daftar laporan masuk (Khusus Admin)",
+        "responses": {
+          "200": { "description": "Daftar laporan berhasil diambil" },
+          "401": { "description": "Tidak terautentikasi" },
+          "403": { "description": "Tidak diizinkan (bukan admin)" }
+        }
+      }
+    },
+    "/api/reports/{id}/status": {
+      "patch": {
+        "tags": ["Administrator"],
+        "summary": "Mengubah status peninjauan laporan (Khusus Admin)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID laporan"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["pending", "reviewed", "resolved"],
+                    "description": "Status laporan baru"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Status laporan berhasil diperbarui" },
+          "400": { "description": "Status tidak valid" },
+          "401": { "description": "Tidak terautentikasi" },
+          "403": { "description": "Tidak diizinkan (bukan admin)" }
+        }
+      }
+    },
     "/ping": {
       "get": {
         "tags": ["Sistem"],
