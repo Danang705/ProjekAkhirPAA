@@ -72,10 +72,10 @@ module.exports = (io) => {
     // Handle live location sharing
     socket.on('send_location', async (data) => {
       try {
-        const { roomId, lat, lng } = data;
+        const { roomId, lat, lng, address } = data;
         const senderId = socket.user.id;
         
-        const content = JSON.stringify({ lat, lng });
+        const content = JSON.stringify({ lat, lng, address });
 
         // Save to DB (Optional: or you can just emit it without saving if it's pure "live" tracking)
         // Here we save it as a 'location' type message
