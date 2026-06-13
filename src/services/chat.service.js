@@ -57,8 +57,25 @@ const saveMessage = async (chatId, senderId, content, type = 'text') => {
   return data;
 };
 
+/**
+ * Ambil data peserta chat (user1 dan user2) berdasarkan chatId
+ * Digunakan oleh socket handler untuk mengetahui siapa penerima notifikasi
+ * @param {string} chatId - ID chat room
+ */
+const getChatParticipants = async (chatId) => {
+  const { data, error } = await supabase
+    .from('chats')
+    .select('user1_id, user2_id')
+    .eq('id', chatId)
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
 module.exports = {
   getChatsList,
   getChatMessages,
-  saveMessage
+  saveMessage,
+  getChatParticipants,
 };

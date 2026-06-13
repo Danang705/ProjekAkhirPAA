@@ -3,6 +3,10 @@ if (dns.setDefaultResultOrder) {
   dns.setDefaultResultOrder('ipv4first');
 }
 
+// Inisialisasi Firebase Admin SDK sebelum server start
+const { initializeFirebase } = require('./config/firebase');
+initializeFirebase();
+
 const http = require('http');
 const { Server } = require('socket.io');
 const app = require('./app');

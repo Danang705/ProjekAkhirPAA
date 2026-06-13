@@ -1,4 +1,6 @@
 const chatService = require('../services/chat.service');
+const notificationService = require('../services/notification.service');
+const supabase = require('../config/supabase');
 const { verifyToken } = require('../utils/jwt.util');
 
 module.exports = (io) => {
@@ -36,6 +38,32 @@ module.exports = (io) => {
 
         // Broadcast to everyone in the room
         io.to(roomId).emit('receive_message', savedMessage);
+
+        // ── FCM: Kirim push notification ke lawan bicara ─────────────────────
+        try {
+          const chatData = await chatService.getChatParticipants(roomId);
+          if (chatData) {
+            const recipientId =
+              chatData.user1_id === senderId ? chatData.user2_id : chatData.user1_id;
+
+            const { data: senderData } = await supabase
+              .from('users')
+              .select('name')
+              .eq('id', senderId)
+              .single();
+
+            await notificationService.notifyNewChatMessage(
+              recipientId,
+              senderData?.name || 'Seseorang',
+              content,
+              roomId,
+              type
+            );
+          }
+        } catch (notifErr) {
+          console.error('[FCM] Failed to send chat notification:', notifErr.message);
+        }
+        // ──────────────────────────────────────────────────────────────────────
       } catch (error) {
         socket.emit('error', { message: 'Failed to send message' });
       }

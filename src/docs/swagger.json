@@ -517,6 +517,94 @@
           "200": { "description": "Statistik Berhasil Diambil" }
         }
       }
+    },
+    "/api/notifications/register-token": {
+      "post": {
+        "tags": ["Notifikasi (Push Notification)"],
+        "summary": "Mendaftarkan FCM token perangkat untuk menerima push notification",
+        "description": "Dipanggil oleh aplikasi Flutter setiap kali user login atau aplikasi dibuka ulang. Token digunakan oleh server untuk mengirim notifikasi real-time ke HP pengguna melalui Firebase Cloud Messaging (FCM).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token"],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "description": "FCM Device Token yang didapatkan dari Firebase SDK di Flutter"
+                  },
+                  "deviceType": {
+                    "type": "string",
+                    "enum": ["android", "ios"],
+                    "default": "android",
+                    "description": "Tipe perangkat pengguna"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "FCM Token Berhasil Didaftarkan" },
+          "400": { "description": "Token tidak disertakan dalam request" },
+          "401": { "description": "Tidak terautentikasi" }
+        }
+      }
+    },
+    "/api/notifications/unregister-token": {
+      "delete": {
+        "tags": ["Notifikasi (Push Notification)"],
+        "summary": "Menghapus FCM token perangkat saat user logout",
+        "description": "Dipanggil oleh aplikasi Flutter saat user melakukan logout. Menghapus token dari database agar notifikasi tidak dikirim ke perangkat yang sudah logout.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token"],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "description": "FCM Device Token yang akan dihapus"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "FCM Token Berhasil Dihapus" },
+          "400": { "description": "Token tidak disertakan dalam request" },
+          "401": { "description": "Tidak terautentikasi" }
+        }
+      }
+    },
+    "/ping": {
+      "get": {
+        "tags": ["Sistem"],
+        "summary": "Health check endpoint - digunakan UptimeRobot agar server Render tidak tidur",
+        "description": "Endpoint ringan yang diping setiap 10-14 menit oleh layanan monitoring (UptimeRobot) untuk menjaga server Render tetap aktif 24/7 dan menghindari cold start delay pada push notification.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Server aktif",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "ok" },
+                    "time": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

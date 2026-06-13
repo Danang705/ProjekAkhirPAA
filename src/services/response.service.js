@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const notificationService = require('./notification.service');
 
 const createResponse = async (postId, userId, data) => {
   const { message, proofImage } = data;
@@ -21,6 +22,33 @@ const createResponse = async (postId, userId, data) => {
     .single();
 
   if (responseError) throw new Error(responseError.message);
+
+  // ── FCM: Beritahu pemilik post ada klaim/response baru ──────────────────
+  try {
+    const { data: postDetail } = await supabase
+      .from('posts')
+      .select('title, user_id')
+      .eq('id', postId)
+      .single();
+
+    const { data: responderDetail } = await supabase
+      .from('users')
+      .select('name')
+      .eq('id', userId)
+      .single();
+
+    if (postDetail && responderDetail) {
+      await notificationService.notifyPostOwnerNewResponse(
+        postDetail.user_id,
+        responderDetail.name,
+        postDetail.title
+      );
+    }
+  } catch (notifErr) {
+    console.error('[FCM] Failed to send new_response notification:', notifErr.message);
+  }
+  // ────────────────────────────────────────────────────────────────────────
+
   return newResponse;
 };
 
@@ -82,12 +110,33 @@ const updateResponseStatus = async (responseId, userId, status) => {
       .single();
 
     if (chatError) {
-      // In a real robust system, we might rollback the status update here if chat creation fails
       console.error('Failed to create chat room:', chatError);
     } else {
       chatRoom = chat;
     }
   }
+
+  // ── FCM: Beritahu claimer status klaimnya sudah diupdate ─────────────────
+  try {
+    const { data: postDetail } = await supabase
+      .from('posts')
+      .select('title')
+      .eq('id', responseData.post_id)
+      .single();
+
+    if (postDetail) {
+      const chatId = chatRoom?.id || '';
+      await notificationService.notifyResponseStatusUpdate(
+        responseData.user_id,
+        postDetail.title,
+        status,
+        chatId
+      );
+    }
+  } catch (notifErr) {
+    console.error('[FCM] Failed to send response_status notification:', notifErr.message);
+  }
+  // ────────────────────────────────────────────────────────────────────────
 
   return { response: updatedResponse, chatRoom };
 };
