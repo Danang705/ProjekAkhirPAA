@@ -11,6 +11,24 @@ const register = async (req, res) => {
       return errorResponse(res, 400, 'Name, email, and password are required');
     }
 
+    // Password complexity validation
+    if (password.length < 12) {
+      return errorResponse(res, 400, 'Password must be at least 12 characters long');
+    }
+
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasDigits = /[0-9]/.test(password);
+    const combineCount = (hasUppercase ? 1 : 0) + (hasLowercase ? 1 : 0) + (hasDigits ? 1 : 0);
+
+    if (combineCount < 2) {
+      return errorResponse(
+        res,
+        400,
+        'Password must combine at least 2 of the following: uppercase letter (A-Z), lowercase letter (a-z), or number (0-9)'
+      );
+    }
+
     const user = await authService.registerUser({ name, email, password, phone });
     return successResponse(res, 201, 'User registered successfully', user);
   } catch (error) {
