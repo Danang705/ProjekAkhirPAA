@@ -1,6 +1,8 @@
 const authService = require('../services/auth.service');
 const { successResponse, errorResponse } = require('../utils/response.util');
 const { verifyToken, generateToken } = require('../utils/jwt.util');
+const { validatePasswordComplexity } = require('../utils/password.util');
+const supabase = require('../config/supabase');
 
 const register = async (req, res) => {
   try {
@@ -12,20 +14,11 @@ const register = async (req, res) => {
     }
 
     // Password complexity validation
-    if (password.length < 8) {
-      return errorResponse(res, 400, 'Password must be at least 8 characters long');
-    }
-
-    const hasUppercase = /[A-Z]/.test(password);
-    const hasLowercase = /[a-z]/.test(password);
-    const hasDigits = /[0-9]/.test(password);
-    const combineCount = (hasUppercase ? 1 : 0) + (hasLowercase ? 1 : 0) + (hasDigits ? 1 : 0);
-
-    if (combineCount < 2) {
+    if (!validatePasswordComplexity(password)) {
       return errorResponse(
         res,
         400,
-        'Password must combine at least 2 of the following: uppercase letter (A-Z), lowercase letter (a-z), or number (0-9)'
+        'Password must be at least 8 characters long and combine at least 2 of the following: uppercase (A-Z), lowercase (a-z), or digits (0-9)'
       );
     }
 
@@ -81,6 +74,21 @@ const refreshToken = async (req, res) => {
       return errorResponse(res, 401, 'Invalid refresh token');
     }
 
+    // Verify user is not banned in database before refreshing
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('is_banned')
+      .eq('id', decoded.id)
+      .single();
+
+    if (error || !user) {
+      return errorResponse(res, 401, 'Unauthorized: User not found');
+    }
+
+    if (user.is_banned) {
+      return errorResponse(res, 403, 'Your account is banned. Please contact support.');
+    }
+
     const payload = { id: decoded.id, email: decoded.email };
     const newAccessToken = generateToken(payload, false);
     
@@ -125,6 +133,14 @@ const resetPassword = async (req, res) => {
     const { resetToken, newPassword } = req.body;
     if (!resetToken || !newPassword) {
       return errorResponse(res, 400, 'Reset token and new password are required');
+    }
+
+    if (!validatePasswordComplexity(newPassword)) {
+      return errorResponse(
+        res,
+        400,
+        'Password must be at least 8 characters long and combine at least 2 of the following: uppercase (A-Z), lowercase (a-z), or digits (0-9)'
+      );
     }
 
     await authService.resetPassword(resetToken, newPassword);

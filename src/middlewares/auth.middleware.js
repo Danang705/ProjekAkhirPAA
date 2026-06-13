@@ -1,7 +1,8 @@
 const { verifyToken } = require('../utils/jwt.util');
 const { errorResponse } = require('../utils/response.util');
+const supabase = require('../config/supabase');
 
-const authenticate = (req, res, next) => {
+const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -13,6 +14,21 @@ const authenticate = (req, res, next) => {
 
     if (!decoded) {
       return errorResponse(res, 401, 'Unauthorized: Invalid or expired token');
+    }
+
+    // Verify user is not banned in the database
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('is_banned')
+      .eq('id', decoded.id)
+      .single();
+
+    if (error || !user) {
+      return errorResponse(res, 401, 'Unauthorized: User not found');
+    }
+
+    if (user.is_banned) {
+      return errorResponse(res, 403, 'Your account is banned. Please contact support.');
     }
 
     // Attach user payload to request
